@@ -27,12 +27,12 @@ def leitura():
         Uso da CPU: {cpu_usage}%
         Frequência da CPU: {cpu_freq} MHz
         Uso de Memória: {memory_usage}%
-        Memória Livre: {memory_free} MB
-        Memória Total: {memory_total} MB
+        Memória Livre: {memory_free} GB
+        Memória Total: {memory_total} GB
         Uso de Disco: {disk_usage}%
         Disco Livre: {disk_free} GB
         Disco Total: {disk_total} GB
-        Média de Performance: {performance_media}
+        Média de Performance: {performance_media}%
         """)
 
 while True:
