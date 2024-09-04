@@ -25,7 +25,7 @@ def leitura():
         idMaquina = 3
 
         inserirDados(idMaquina, cpu_usage, cpu_freq, memory_usage, memory_free, memory_total, disk_usage, disk_free, disk_total, performance_media)
-        time.sleep(5)
+        time.sleep(150)
 
 def conectarDb():
     return sql.connect(
