@@ -2,6 +2,21 @@ import psutil
 import time
 from datetime import datetime
 import mysql.connector as sql
+import re
+
+def idUnicoMaquina():
+    for interface, addrs in psutil.net_if_addrs().items():
+        for addr in addrs:
+            if addr.family == psutil.AF_LINK:
+                mac = addr.address
+                if mac:
+                    # Remove os ':' do endereço MAC
+                    mac = re.sub(r'[:.-]', '', mac)
+                    # Converte o MAC para inteiro e pega os últimos 8 dígitos
+                    mac_int = int(mac, 16) & 0xFFFFFFFF
+                    return mac_int
+    return None
+
 
 def leitura():
     cpu_usage = psutil.cpu_percent(interval=1)
@@ -15,9 +30,13 @@ def leitura():
     disk_usage = disk.percent
     disk_total = round(disk.total / 1024.0 / 1024.0 / 1024.0, 1)
 
-    idMaquina = 3
+    idMaquina = idUnicoMaquina()
+    if idMaquina is None:
+        print("Erro ao obter o endereço MAC.")
+        return
 
     inserirDados(idMaquina, cpu_usage, cpu_freq, memory_usage, memory_total, disk_usage, disk_total)
+
 
 def conectarDb():
     return sql.connect(
@@ -28,18 +47,20 @@ def conectarDb():
         database="cco1"
     )
 
+
 def inserirDados(idMaquina, cpu_usage, cpu_freq, memory_usage, memory_total, disk_usage, disk_total):
     momento = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     banco = conectarDb()
     cursor = banco.cursor()
     query = """
         INSERT INTO dados 
-        (idMaquina, momento, cpu_usage, cpu_freq, memory_usage, memory_total, disk_usage, disk_total) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """
+            (idMaquina, momento, cpu_usage, cpu_freq, memory_usage, memory_total, disk_usage, disk_total) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
     val = (idMaquina, momento, cpu_usage, cpu_freq, memory_usage, memory_total, disk_usage, disk_total)
     cursor.execute(query, val)
     banco.commit()
+
 
 def listarMaquinas():
     banco = conectarDb()
@@ -50,6 +71,7 @@ def listarMaquinas():
 
     return maquinas
 
+
 def buscarDados(idMaquina, component):
     banco = conectarDb()
     cursor = banco.cursor()
@@ -58,6 +80,7 @@ def buscarDados(idMaquina, component):
     resultado = cursor.fetchone()
 
     return resultado
+
 
 def listarMemoria(idMaquina):
     banco = conectarDb()
@@ -68,6 +91,7 @@ def listarMemoria(idMaquina):
 
     return resultado
 
+
 def listarDisco(idMaquina):
     banco = conectarDb()
     cursor = banco.cursor()
@@ -76,6 +100,7 @@ def listarDisco(idMaquina):
     resultado = cursor.fetchone()
 
     return resultado
+
 
 def menu_interacao():
     while True:
@@ -171,6 +196,7 @@ def menu_interacao():
                 else:
                     print(f"Nenhum dado encontrado para a máquina {idMaquina}.")
             time.sleep(5)
+
 
 while True:
     leitura()
