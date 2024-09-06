@@ -14,7 +14,6 @@ def leitura():
 
         disk = psutil.disk_usage('/')
         disk_usage = disk.percent
-        disk_free = round(disk.free / 1024.0 / 1024.0 / 1024.0, 1)
         disk_total = round(disk.total / 1024.0 / 1024.0 / 1024.0, 1)
 
         performance_media = round((cpu_usage + memory_usage + disk_usage) / 3, 1)
@@ -27,10 +26,8 @@ def leitura():
         Uso da CPU: {cpu_usage}%
         Frequência da CPU: {cpu_freq} MHz
         Uso de Memória: {memory_usage}%
-        Memória Livre: {memory_free} GB
         Memória Total: {memory_total} GB
         Uso de Disco: {disk_usage}%
-        Disco Livre: {disk_free} GB
         Disco Total: {disk_total} GB
         Média de Performance: {performance_media}%
         """)
