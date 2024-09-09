@@ -20,7 +20,7 @@ def leitura():
 
         idMaquina = 3
 
-        time.sleep(5)
+        time.sleep(150)
         print(f"""
         ID da Máquina: {idMaquina}
         Uso da CPU: {cpu_usage}%
@@ -29,7 +29,6 @@ def leitura():
         Memória Total: {memory_total} GB
         Uso de Disco: {disk_usage}%
         Disco Total: {disk_total} GB
-        Média de Performance: {performance_media}%
         """)
 
 while True:
