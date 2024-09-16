@@ -4,6 +4,43 @@ from datetime import datetime
 import mysql.connector as sql
 import re
 
+import requests
+import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv('configuracoes.env')
+
+email_jira = os.getenv('JIRA_EMAIL')
+chave_jira = os.getenv('CHAVE_DO_JIRA')
+
+limiteCPU = 10.0
+limiteMEM = 85.0
+limiteDSK = 85.0
+
+
+def abrir_chamado_jira(categoria, tipo, limite_atual):
+    url = "https://safeserver.atlassian.net/rest/api/2/issue"
+    auth = (email_jira, chave_jira)
+    headers = {"Content-Type": "application/json"}
+    descricao = f"O uso de {categoria} ultrapassou o limite de {tipo}. Utilização atual: {limite_atual:.2f}%."
+
+    dados_chamado = {
+        "fields": {
+            "project": {"key": "GAT"},
+            "summary": f"Limite de {categoria} excedido - Uso de {limite_atual:.2f}%",
+            "description": descricao,
+            "issuetype": {"name": "Investigar um problema"}
+        }
+    }
+
+    response = requests.post(url, auth=auth, headers=headers, data=json.dumps(dados_chamado))
+    
+    if response.status_code == 201:
+        print(f"Chamado criado com sucesso no Jira para {categoria}!")
+    else:
+        print(f"Falha ao criar chamado para {categoria}. Status: {response.status_code}, Erro: {response.text}")
+
 def idUnicoMaquina():
     for interface, addrs in psutil.net_if_addrs().items():
         for addr in addrs:
@@ -40,11 +77,11 @@ def leitura():
 
 def conectarDb():
     return sql.connect(
-        host='localhost',
+        host='##',
         port="3306",
         user='root',
-        password='7895',
-        database="cco1"
+        password='##',
+        database="GateWatch"
     )
 
 
@@ -60,6 +97,15 @@ def inserirDados(idMaquina, cpu_usage, cpu_freq, memory_usage, memory_total, dis
     val = (idMaquina, momento, cpu_usage, cpu_freq, memory_usage, memory_total, disk_usage, disk_total)
     cursor.execute(query, val)
     banco.commit()
+
+    if cpu_usage > limiteCPU:
+            abrir_chamado_jira("CPU", cpu_usage, limiteCPU)
+        
+    if (memory_usage / memory_total * 100) > limiteMEM:
+            abrir_chamado_jira("Memória", (memory_usage / memory_total * 100), limiteMEM)
+        
+    if (memory_usage / memory_total * 100) > limiteDSK:
+            abrir_chamado_jira("Disco", (memory_usage / memory_total * 100), limiteDSK)
 
 
 def listarMaquinas():
