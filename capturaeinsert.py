@@ -20,14 +20,14 @@ limiteDSK = 85.0
 
 
 def abrir_chamado_jira(categoria, tipo, limite_atual):
-    url = "https://safeserver.atlassian.net/rest/api/2/issue"
+    url = "https://marketsafee.atlassian.net/rest/api/2/issue"
     auth = (email_jira, chave_jira)
     headers = {"Content-Type": "application/json"}
     descricao = f"O uso de {categoria} ultrapassou o limite de {tipo}. Utilização atual: {limite_atual:.2f}%."
 
     dados_chamado = {
         "fields": {
-            "project": {"key": "GAT"},
+            "project": {"key": "GW"},
             "summary": f"Limite de {categoria} excedido - Uso de {limite_atual:.2f}%",
             "description": descricao,
             "issuetype": {"name": "Investigar um problema"}
@@ -77,10 +77,10 @@ def leitura():
 
 def conectarDb():
     return sql.connect(
-        host='##',
+        host='localhost',
         port="3306",
         user='root',
-        password='##',
+        password='###',
         database="GateWatch"
     )
 
@@ -98,14 +98,27 @@ def inserirDados(idMaquina, cpu_usage, cpu_freq, memory_usage, memory_total, dis
     cursor.execute(query, val)
     banco.commit()
 
+    countCPU = 0
+    countMEM = 0
+    countDSK = 0
     if cpu_usage > limiteCPU:
+        countCPU += 1
+        if(countCPU >= 5):
+            countCPU = 0
             abrir_chamado_jira("CPU", cpu_usage, limiteCPU)
-        
-    if (memory_usage / memory_total * 100) > limiteMEM:
-            abrir_chamado_jira("Memória", (memory_usage / memory_total * 100), limiteMEM)
-        
-    if (memory_usage / memory_total * 100) > limiteDSK:
-            abrir_chamado_jira("Disco", (memory_usage / memory_total * 100), limiteDSK)
+
+    
+    if memory_usage > limiteMEM:
+        countMEM += 1
+        if(countMEM >= 5):
+            countMEM = 0
+            abrir_chamado_jira("Memória", memory_usage, limiteMEM)
+    
+    if disk_usage > limiteDSK:
+        countDSK += 1
+        if(countDSK >= 5):
+            countDSK = 0
+            abrir_chamado_jira("Disco", disk_usage, limiteDSK)
 
 
 def listarMaquinas():
